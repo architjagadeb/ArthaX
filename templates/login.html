@@ -6,7 +6,15 @@
     <h1>Welcome Back</h1>
     <p>Sign in to your ArthaX account</p>
     
-    <form id="loginForm">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-message flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    
+    <form id="loginForm" method="POST" action="{{ url_for('login') }}">
       <div class="form-group">
         <label for="email">Email Address</label>
         <input type="email" id="email" name="email" placeholder="you@example.com" required>
@@ -26,12 +34,5 @@
   </div>
 </main>
 
-<script>
-  document.getElementById('loginForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    // Add login logic here
-    alert('Login functionality will be implemented with backend authentication');
-  });
-</script>
 
 {% endblock %}

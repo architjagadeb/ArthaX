@@ -216,6 +216,7 @@ window.addEventListener('load', animateCards);
 // Portfolio Page Functionality
 document.addEventListener('DOMContentLoaded', function() {
   initializePortfolio();
+  initializeSavings();
 });
 
 function initializePortfolio() {
@@ -264,6 +265,48 @@ function initializePortfolio() {
   animateProgressBar();
 }
 
+function initializeSavings() {
+  // Initialize savings modal (works on both home and portfolio pages)
+  const addSavingsBtn = document.getElementById('addSavingsBtn');
+  const savingsModal = document.getElementById('savingsModal');
+  const closeSavingsModal = document.getElementById('closeSavingsModal');
+  const cancelSavingsBtn = document.getElementById('cancelSavingsBtn');
+  const savingsForm = document.getElementById('savingsForm');
+
+  if (!savingsModal) return;
+
+  // Open modal
+  if (addSavingsBtn) {
+    addSavingsBtn.addEventListener('click', () => {
+      savingsModal.classList.add('active');
+      // Set today's date as default
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('savingsDate').value = today;
+    });
+  }
+
+  // Close modal
+  function closeSavingsModalFunc() {
+    savingsModal.classList.remove('active');
+    if (savingsForm) savingsForm.reset();
+  }
+
+  if (closeSavingsModal) closeSavingsModal.addEventListener('click', closeSavingsModalFunc);
+  if (cancelSavingsBtn) cancelSavingsBtn.addEventListener('click', closeSavingsModalFunc);
+  
+  // Close on overlay click
+  savingsModal.addEventListener('click', (e) => {
+    if (e.target === savingsModal) {
+      closeSavingsModalFunc();
+    }
+  });
+
+  // Handle form submission
+  if (savingsForm) {
+    savingsForm.addEventListener('submit', handleSavingsSubmit);
+  }
+}
+
 function handleExpenseSubmit(e) {
   e.preventDefault();
 
@@ -280,15 +323,39 @@ function handleExpenseSubmit(e) {
     return;
   }
 
-  // Add expense to table
-  addExpenseToTable(formData);
+  // Submit to backend
+  fetch('/api/expenses', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Add expense to table
+      addExpenseToTable(data.expense);
 
-  // Update totals
-  updateTotals(formData.amount);
+      // Update totals
+      updateTotals(data.expense.amount);
 
-  // Close modal and reset form
-  document.getElementById('expenseModal').classList.remove('active');
-  e.target.reset();
+      // Close modal and reset form
+      document.getElementById('expenseModal').classList.remove('active');
+      e.target.reset();
+
+      // Reload page to get updated totals from backend
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } else {
+      alert('Error: ' + (data.error || 'Failed to add expense'));
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('An error occurred. Please try again.');
+  });
 }
 
 function addExpenseToTable(expense) {
@@ -345,9 +412,81 @@ function updateTotals(amount) {
   // In a real app, you'd calculate this based on income - expenses
   // For now, we'll just update the display
   updateProgressBar();
+}
+
+function handleSavingsSubmit(e) {
+  e.preventDefault();
+
+  const formData = {
+    date: document.getElementById('savingsDate').value,
+    amount: parseFloat(document.getElementById('savingsAmount').value),
+    note: document.getElementById('savingsNote').value || null
+  };
+
+  // Validation
+  if (!formData.date || !formData.amount || formData.amount <= 0) {
+    alert('Please fill in all required fields with valid values.');
+    return;
+  }
+
+  // Submit to backend
+  fetch('/api/savings', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Add savings to table if table exists
+      const savingsTableBody = document.getElementById('savingsTableBody');
+      if (savingsTableBody) {
+        addSavingsToTable(data.saving);
+      }
+
+      // Close modal and reset form
+      document.getElementById('savingsModal').classList.remove('active');
+      e.target.reset();
+
+      // Reload page to get updated totals from backend
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } else {
+      alert('Error: ' + (data.error || 'Failed to add savings'));
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('An error occurred. Please try again.');
+  });
+}
+
+function addSavingsToTable(saving) {
+  const tbody = document.getElementById('savingsTableBody');
+  if (!tbody) return;
   
-  // Note: In a production app, you'd also update the monthlySpending data
-  // and refresh the chart. For this demo, the chart shows initial data.
+  const row = document.createElement('tr');
+
+  row.innerHTML = `
+    <td>${saving.date}</td>
+    <td class="expense-amount" style="color: #4ade80;">+₹${saving.amount.toLocaleString('en-IN', {maximumFractionDigits: 0})}</td>
+    <td class="expense-note">${saving.note || '-'}</td>
+  `;
+
+  // Insert at the top
+  tbody.insertBefore(row, tbody.firstChild);
+
+  // Add hover effect
+  row.style.opacity = '0';
+  row.style.transform = 'translateX(-20px)';
+  setTimeout(() => {
+    row.style.transition = 'all 0.3s ease';
+    row.style.opacity = '1';
+    row.style.transform = 'translateX(0)';
+  }, 10);
 }
 
 function updateProgressBar() {

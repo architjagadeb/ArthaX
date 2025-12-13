@@ -6,10 +6,18 @@
     <h1>Create Account</h1>
     <p>Join ArthaX and start tracking your wealth</p>
     
-    <form id="signupForm">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-message flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    
+    <form id="signupForm" method="POST" action="{{ url_for('signup') }}">
       <div class="form-group">
-        <label for="name">Full Name</label>
-        <input type="text" id="name" name="name" placeholder="John Doe" required>
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="johndoe" required>
       </div>
       
       <div class="form-group">
@@ -36,20 +44,5 @@
   </div>
 </main>
 
-<script>
-  document.getElementById('signupForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    
-    if (password !== confirmPassword) {
-      alert('Passwords do not match');
-      return;
-    }
-    
-    // Add signup logic here
-    alert('Signup functionality will be implemented with backend authentication');
-  });
-</script>
 
 {% endblock %}

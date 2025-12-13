@@ -2,6 +2,43 @@
 {% block content %}
 
 <main class="dashboard">
+  {% if show_onboarding %}
+  <!-- Onboarding Form -->
+  <div class="glass financial-summary-card">
+    <h2>Welcome to ArthaX!</h2>
+    <p class="helper-text" style="margin-bottom: 2rem;">Let's set up your financial profile to get started.</p>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-message flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    
+    <form method="POST" action="{{ url_for('portfolio') }}" class="onboarding-form">
+      <input type="hidden" name="onboarding" value="true">
+      
+      <div class="form-group">
+        <label for="monthly_income">Monthly Income (₹)</label>
+        <input type="number" id="monthly_income" name="monthly_income" min="0" step="0.01" placeholder="0.00" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="savings_goal">Savings Goal (₹)</label>
+        <input type="number" id="savings_goal" name="savings_goal" min="0" step="0.01" placeholder="0.00" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="current_savings">Current Savings (₹)</label>
+        <input type="number" id="current_savings" name="current_savings" min="0" step="0.01" placeholder="0.00" value="0">
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Save Profile</button>
+    </form>
+  </div>
+  
+  {% else %}
   <!-- Financial Summary Card -->
   <div class="glass financial-summary-card">
     <h2>Your Financial Summary</h2>
@@ -9,15 +46,15 @@
       <div class="metric-item">
         <div class="metric-icon">💰</div>
         <div class="metric-content">
-          <div class="metric-label">Total Spent</div>
-          <div class="metric-value">₹{{ "{:,.0f}".format(portfolio.totalSpent) }}</div>
+          <div class="metric-label">Total Spent (This Month)</div>
+          <div class="metric-value">₹{{ "{:,.0f}".format(financial_data.total_spent) }}</div>
         </div>
       </div>
       <div class="metric-item">
         <div class="metric-icon">🎯</div>
         <div class="metric-content">
           <div class="metric-label">Savings Goal</div>
-          <div class="metric-value">₹{{ "{:,.0f}".format(portfolio.savings.goal) }}</div>
+          <div class="metric-value">₹{{ "{:,.0f}".format(financial_data.profile.savings_goal) }}</div>
         </div>
       </div>
       <div class="metric-item progress-item">
@@ -25,13 +62,13 @@
         <div class="metric-content">
           <div class="metric-label">Progress</div>
           <div class="progress-container">
-            <div class="progress-bar" id="savingsProgressBar" style="width: {{ portfolio.savings.progress }}%">
-              <span class="progress-text">{{ portfolio.savings.progress }}%</span>
+            <div class="progress-bar" id="savingsProgressBar" style="width: {{ financial_data.savings_progress }}%">
+              <span class="progress-text">{{ "{:.0f}".format(financial_data.savings_progress) }}%</span>
             </div>
           </div>
           <div class="progress-amounts">
-            <span>₹{{ "{:,.0f}".format(portfolio.savings.current) }}</span>
-            <span>₹{{ "{:,.0f}".format(portfolio.savings.goal) }}</span>
+            <span>₹{{ "{:,.0f}".format(financial_data.total_savings) }}</span>
+            <span>₹{{ "{:,.0f}".format(financial_data.profile.savings_goal) }}</span>
           </div>
         </div>
       </div>
@@ -43,6 +80,12 @@
   <button class="glass add-expense-btn" id="addExpenseBtn">
     <span class="btn-icon">➕</span>
     <span>Add Expense</span>
+  </button>
+
+  <!-- Add Savings Button -->
+  <button class="glass add-expense-btn" id="addSavingsBtn" style="max-width: 300px; margin-bottom: 2rem;">
+    <span class="btn-icon">➕</span>
+    <span>Add Savings</span>
   </button>
 
   <!-- Expenses Table -->
@@ -59,31 +102,68 @@
           </tr>
         </thead>
         <tbody id="expensesTableBody">
-          {% for expense in portfolio.expenses|sort(attribute='date', reverse=True) %}
-          <tr>
-            <td>{{ expense.date }}</td>
-            <td>
-              <span class="category-badge category-{{ expense.category|lower }}">
-                {% if expense.category == "Food" %}🍔
-                {% elif expense.category == "Transport" %}🚗
-                {% elif expense.category == "Entertainment" %}🎬
-                {% elif expense.category == "Study" %}📚
-                {% elif expense.category == "Utilities" %}💡
-                {% else %}📝{% endif %}
-                {{ expense.category }}
-              </span>
-            </td>
-            <td class="expense-amount">₹{{ "{:,.0f}".format(expense.amount) }}</td>
-            <td class="expense-note">{{ expense.note or "-" }}</td>
-          </tr>
-          {% endfor %}
+          {% if financial_data.expenses %}
+            {% for expense in financial_data.expenses %}
+            <tr>
+              <td>{{ expense.date }}</td>
+              <td>
+                <span class="category-badge category-{{ expense.category|lower }}">
+                  {% if expense.category == "Food" %}🍔
+                  {% elif expense.category == "Transport" %}🚗
+                  {% elif expense.category == "Entertainment" %}🎬
+                  {% elif expense.category == "Study" %}📚
+                  {% elif expense.category == "Utilities" %}💡
+                  {% else %}📝{% endif %}
+                  {{ expense.category }}
+                </span>
+              </td>
+              <td class="expense-amount">₹{{ "{:,.0f}".format(expense.amount) }}</td>
+              <td class="expense-note">{{ expense.note or "-" }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="4" style="text-align: center; color: #94a3b8; padding: 2rem;">
+                No expenses yet. Click "Add Expense" to get started!
+              </td>
+            </tr>
+          {% endif %}
         </tbody>
       </table>
     </div>
     <p class="table-helper">Every expense counts.</p>
   </div>
 
+  <!-- Recent Savings -->
+  {% if financial_data.savings %}
+  <div class="glass expenses-section" style="margin-bottom: 2rem;">
+    <h2>Recent Savings</h2>
+    <div class="table-container">
+      <table class="expenses-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="savingsTableBody">
+          {% for saving in financial_data.savings %}
+          <tr>
+            <td>{{ saving.date }}</td>
+            <td class="expense-amount" style="color: #4ade80;">+₹{{ "{:,.0f}".format(saving.amount) }}</td>
+            <td class="expense-note">{{ saving.note or "-" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
 </main>
+
+{% if not show_onboarding %}
 
 <!-- Add Expense Modal -->
 <div class="modal-overlay" id="expenseModal">
@@ -125,13 +205,49 @@
   </div>
 </div>
 
+<!-- Add Savings Modal -->
+<div class="modal-overlay" id="savingsModal">
+  <div class="glass modal-content">
+    <div class="modal-header">
+      <h2>Add Savings</h2>
+      <button class="modal-close" id="closeSavingsModal">&times;</button>
+    </div>
+    <form id="savingsForm" class="expense-form">
+      <div class="form-group">
+        <label for="savingsDate">Date</label>
+        <input type="date" id="savingsDate" name="date" required>
+      </div>
+      <div class="form-group">
+        <label for="savingsAmount">Amount (₹)</label>
+        <input type="number" id="savingsAmount" name="amount" min="0" step="0.01" placeholder="0.00" required>
+      </div>
+      <div class="form-group">
+        <label for="savingsNote">Note (Optional)</label>
+        <input type="text" id="savingsNote" name="note" placeholder="Add a note about this savings">
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-secondary">Add Savings</button>
+        <button type="button" class="btn btn-primary" id="cancelSavingsBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
 <script>
+  {% if not show_onboarding and financial_data %}
   // Pass data to JavaScript
   window.portfolioData = {
-    totalSpent: {{ portfolio.totalSpent }},
-    savings: {{ portfolio.savings | tojson }},
-    expenses: {{ portfolio.expenses | tojson }}
+    totalSpent: {{ financial_data.total_spent }},
+    savings: {
+      current: {{ financial_data.total_savings }},
+      goal: {{ financial_data.profile.savings_goal }},
+      progress: {{ financial_data.savings_progress }}
+    },
+    expenses: {{ financial_data.expenses | tojson }},
+    savings_list: {{ financial_data.savings | tojson }}
   };
+  {% endif %}
 </script>
 
 {% endblock %}

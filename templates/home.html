@@ -7,8 +7,33 @@
     <img src="{{ url_for('static', filename='images/arthax-hero.png') }}" alt="ArthaX - Track expenses. Build savings. Explore markets." class="hero-image">
   </section>
 
-  <!-- Student Finance Quick Stats -->
+  <!-- Finance Quick Stats -->
   <section class="market-row">
+    {% if is_authenticated and financial_data %}
+    <div class="glass market-card">
+      <h3>Monthly Budget Used</h3>
+      <div class="price">₹{{ "{:,.0f}".format(financial_data.total_spent) }} / ₹{{ "{:,.0f}".format(financial_data.monthly_budget) }}</div>
+      <div class="change {% if financial_data.budget_used_percent <= 80 %}positive{% else %}negative{% endif %}">
+        {{ "{:.0f}".format(financial_data.budget_used_percent) }}% Used
+      </div>
+    </div>
+
+    <div class="glass market-card">
+      <h3>Savings Progress</h3>
+      <div class="price">{{ "{:.0f}".format(financial_data.savings_progress) }}% to Goal</div>
+      <div class="change positive">
+        ₹{{ "{:,.0f}".format(financial_data.total_savings) }} / ₹{{ "{:,.0f}".format(financial_data.profile.savings_goal) }}
+      </div>
+    </div>
+
+    <div class="glass market-card">
+      <h3>Markets</h3>
+      <div class="price">Bitcoin +2%</div>
+      <div class="change positive">
+        Sensex +1%
+      </div>
+    </div>
+    {% else %}
     <div class="glass market-card">
       <h3>Monthly Budget Used</h3>
       <div class="price">₹{{ "{:,.0f}".format(student_stats.monthlyBudget.used) }} / ₹{{ "{:,.0f}".format(student_stats.monthlyBudget.total) }}</div>
@@ -32,7 +57,39 @@
         Sensex +{{ "{:.0f}".format(student_stats.funMarkets.sensex.changePercent) }}%
       </div>
     </div>
+    {% endif %}
   </section>
+
+  {% if is_authenticated and financial_data %}
+  
+
+  <!-- Recent Savings -->
+  {% if financial_data.savings %}
+  <div class="glass expenses-section" style="margin-bottom: 2rem;">
+    <h2>Recent Savings</h2>
+    <div class="table-container">
+      <table class="expenses-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="savingsTableBody">
+          {% for saving in financial_data.savings %}
+          <tr>
+            <td>{{ saving.date }}</td>
+            <td class="expense-amount" style="color: #4ade80;">+₹{{ "{:,.0f}".format(saving.amount) }}</td>
+            <td class="expense-note">{{ saving.note or "-" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
 
   <!-- Chart -->
   <section class="glass chart-card">
@@ -58,6 +115,36 @@
     </div>
   </section>
 </main>
+
+{% if is_authenticated and financial_data %}
+<!-- Add Savings Modal -->
+<div class="modal-overlay" id="savingsModal">
+  <div class="glass modal-content">
+    <div class="modal-header">
+      <h2>Add Savings</h2>
+      <button class="modal-close" id="closeSavingsModal">&times;</button>
+    </div>
+    <form id="savingsForm" class="expense-form">
+      <div class="form-group">
+        <label for="savingsDate">Date</label>
+        <input type="date" id="savingsDate" name="date" required>
+      </div>
+      <div class="form-group">
+        <label for="savingsAmount">Amount (₹)</label>
+        <input type="number" id="savingsAmount" name="amount" min="0" step="0.01" placeholder="0.00" required>
+      </div>
+      <div class="form-group">
+        <label for="savingsNote">Note (Optional)</label>
+        <input type="text" id="savingsNote" name="note" placeholder="Add a note about this savings">
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-secondary">Add Savings</button>
+        <button type="button" class="btn btn-primary" id="cancelSavingsBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
 
 <script>
   // Chart data from backend - make it globally accessible
