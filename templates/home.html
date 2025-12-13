@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+
+<main class="dashboard">
+  <!-- Hero Image -->
+  <section class="glass hero-image-container">
+    <img src="{{ url_for('static', filename='images/arthax-hero.png') }}" alt="ArthaX - Track expenses. Build savings. Explore markets." class="hero-image">
+  </section>
+
+  <!-- Student Finance Quick Stats -->
+  <section class="market-row">
+    <div class="glass market-card">
+      <h3>Monthly Budget Used</h3>
+      <div class="price">₹{{ "{:,.0f}".format(student_stats.monthlyBudget.used) }} / ₹{{ "{:,.0f}".format(student_stats.monthlyBudget.total) }}</div>
+      <div class="change {% if student_stats.monthlyBudget.percentage <= 80 %}positive{% else %}negative{% endif %}">
+        {{ student_stats.monthlyBudget.percentage }}% Used
+      </div>
+    </div>
+
+    <div class="glass market-card">
+      <h3>Savings Progress</h3>
+      <div class="price">{{ student_stats.savingsProgress.percentage }}% to Goal</div>
+      <div class="change positive">
+        ₹{{ "{:,.0f}".format(student_stats.savingsProgress.current) }} / ₹{{ "{:,.0f}".format(student_stats.savingsProgress.goal) }}
+      </div>
+    </div>
+
+    <div class="glass market-card">
+      <h3>Markets</h3>
+      <div class="price">Bitcoin +{{ "{:.0f}".format(student_stats.funMarkets.bitcoin.changePercent) }}%</div>
+      <div class="change positive">
+        Sensex +{{ "{:.0f}".format(student_stats.funMarkets.sensex.changePercent) }}%
+      </div>
+    </div>
+  </section>
+
+  <!-- Chart -->
+  <section class="glass chart-card">
+    <h2>Monthly Spending Overview</h2>
+    <canvas id="marketChart"></canvas>
+  </section>
+
+  <!-- Finance Tips & Student Money Hacks -->
+  <section class="glass" style="padding: 2.5rem;">
+    <h2 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 1.5rem; color: #ffffff;">Finance Tips & Student Money Hacks</h2>
+    <div class="news-container">
+      {% for tip in student_tips %}
+      <div class="glass news-card">
+        <span class="category">{{ tip.category }}</span>
+        <h3>{{ tip.title }}</h3>
+        <p class="summary">{{ tip.summary }}</p>
+        <div class="meta">
+          <span>ArthaX Tips</span>
+          <span>{{ tip.date }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+
+<script>
+  // Chart data from backend - make it globally accessible
+  window.chartData = {{ chart_data | tojson }};
+</script>
+
+{% endblock %}

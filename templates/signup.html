@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+
+<main>
+  <div class="glass form-container">
+    <h1>Create Account</h1>
+    <p>Join ArthaX and start tracking your wealth</p>
+    
+    <form id="signupForm">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" placeholder="John Doe" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Create a strong password" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+      </div>
+      
+      <button type="submit" class="btn">Create Account</button>
+    </form>
+    
+    <div class="form-footer">
+      Already have an account? <a href="/login">Sign in</a>
+    </div>
+  </div>
+</main>
+
+<script>
+  document.getElementById('signupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (password !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+    
+    // Add signup logic here
+    alert('Signup functionality will be implemented with backend authentication');
+  });
+</script>
+
+{% endblock %}

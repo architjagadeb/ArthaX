@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block content %}
+
+<main class="dashboard">
+  <!-- Financial Summary Card -->
+  <div class="glass financial-summary-card">
+    <h2>Your Financial Summary</h2>
+    <div class="summary-metrics">
+      <div class="metric-item">
+        <div class="metric-icon">💰</div>
+        <div class="metric-content">
+          <div class="metric-label">Total Spent</div>
+          <div class="metric-value">₹{{ "{:,.0f}".format(portfolio.totalSpent) }}</div>
+        </div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-icon">🎯</div>
+        <div class="metric-content">
+          <div class="metric-label">Savings Goal</div>
+          <div class="metric-value">₹{{ "{:,.0f}".format(portfolio.savings.goal) }}</div>
+        </div>
+      </div>
+      <div class="metric-item progress-item">
+        <div class="metric-icon">📊</div>
+        <div class="metric-content">
+          <div class="metric-label">Progress</div>
+          <div class="progress-container">
+            <div class="progress-bar" id="savingsProgressBar" style="width: {{ portfolio.savings.progress }}%">
+              <span class="progress-text">{{ portfolio.savings.progress }}%</span>
+            </div>
+          </div>
+          <div class="progress-amounts">
+            <span>₹{{ "{:,.0f}".format(portfolio.savings.current) }}</span>
+            <span>₹{{ "{:,.0f}".format(portfolio.savings.goal) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="helper-text">Track your spending and stay aligned with your goals.</p>
+  </div>
+
+  <!-- Add Expense Button -->
+  <button class="glass add-expense-btn" id="addExpenseBtn">
+    <span class="btn-icon">➕</span>
+    <span>Add Expense</span>
+  </button>
+
+  <!-- Expenses Table -->
+  <div class="glass expenses-section">
+    <h2>Recent Expenses</h2>
+    <div class="table-container">
+      <table class="expenses-table" id="expensesTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="expensesTableBody">
+          {% for expense in portfolio.expenses|sort(attribute='date', reverse=True) %}
+          <tr>
+            <td>{{ expense.date }}</td>
+            <td>
+              <span class="category-badge category-{{ expense.category|lower }}">
+                {% if expense.category == "Food" %}🍔
+                {% elif expense.category == "Transport" %}🚗
+                {% elif expense.category == "Entertainment" %}🎬
+                {% elif expense.category == "Study" %}📚
+                {% elif expense.category == "Utilities" %}💡
+                {% else %}📝{% endif %}
+                {{ expense.category }}
+              </span>
+            </td>
+            <td class="expense-amount">₹{{ "{:,.0f}".format(expense.amount) }}</td>
+            <td class="expense-note">{{ expense.note or "-" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="table-helper">Every expense counts.</p>
+  </div>
+
+</main>
+
+<!-- Add Expense Modal -->
+<div class="modal-overlay" id="expenseModal">
+  <div class="glass modal-content">
+    <div class="modal-header">
+      <h2>Add New Expense</h2>
+      <button class="modal-close" id="closeModal">&times;</button>
+    </div>
+    <form id="expenseForm" class="expense-form">
+      <div class="form-group">
+        <label for="expenseDate">Date</label>
+        <input type="date" id="expenseDate" name="date" required>
+      </div>
+      <div class="form-group">
+        <label for="expenseCategory">Category</label>
+        <select id="expenseCategory" name="category" required>
+          <option value="">Select a category</option>
+          <option value="Food">Food</option>
+          <option value="Transport">Transport</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Utilities">Utilities</option>
+          <option value="Study">Study</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="expenseAmount">Amount (₹)</label>
+        <input type="number" id="expenseAmount" name="amount" min="0" step="0.01" placeholder="0.00" required>
+      </div>
+      <div class="form-group">
+        <label for="expenseNote">Note (Optional)</label>
+        <input type="text" id="expenseNote" name="note" placeholder="Add a note about this expense">
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-secondary">Add Expense</button>
+        <button type="button" class="btn btn-primary" id="cancelBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Pass data to JavaScript
+  window.portfolioData = {
+    totalSpent: {{ portfolio.totalSpent }},
+    savings: {{ portfolio.savings | tojson }},
+    expenses: {{ portfolio.expenses | tojson }}
+  };
+</script>
+
+{% endblock %}

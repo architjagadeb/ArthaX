@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+
+<main class="dashboard">
+  <h1 class="section-title" style="margin-bottom: 2rem;">Market News</h1>
+  
+  <div class="news-container">
+    {% for article in news %}
+    <div class="glass news-card">
+      <span class="category">{{ article.category }}</span>
+      <h3>{{ article.title }}</h3>
+      <p class="summary">{{ article.summary }}</p>
+      <div class="meta">
+        <span>{{ article.source }}</span>
+        <span>{{ article.date }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</main>
+
+{% endblock %}
+

@@ -1,0 +1,216 @@
+{
+  "markets": {
+    "stocks": [
+      {"symbol": "AAPL", "name": "Apple Inc.", "price": 175.43, "change": 2.34, "changePercent": 1.35},
+      {"symbol": "GOOGL", "name": "Alphabet Inc.", "price": 142.56, "change": -1.23, "changePercent": -0.85},
+      {"symbol": "MSFT", "name": "Microsoft Corp.", "price": 378.85, "change": 5.67, "changePercent": 1.52},
+      {"symbol": "AMZN", "name": "Amazon.com Inc.", "price": 148.32, "change": 0.89, "changePercent": 0.60},
+      {"symbol": "TSLA", "name": "Tesla Inc.", "price": 248.50, "change": -3.45, "changePercent": -1.37},
+      {"symbol": "META", "name": "Meta Platforms", "price": 485.20, "change": 8.90, "changePercent": 1.87}
+    ],
+    "crypto": [
+      {"symbol": "BTC", "name": "Bitcoin", "price": 43250.00, "change": -350.00, "changePercent": -0.80},
+      {"symbol": "ETH", "name": "Ethereum", "price": 2650.75, "change": 45.20, "changePercent": 1.73},
+      {"symbol": "BNB", "name": "Binance Coin", "price": 315.40, "change": -2.10, "changePercent": -0.66},
+      {"symbol": "SOL", "name": "Solana", "price": 98.25, "change": 3.45, "changePercent": 3.64},
+      {"symbol": "ADA", "name": "Cardano", "price": 0.52, "change": 0.02, "changePercent": 4.00},
+      {"symbol": "XRP", "name": "Ripple", "price": 0.63, "change": -0.01, "changePercent": -1.56}
+    ],
+    "forex": [
+      {"pair": "USD/EUR", "rate": 0.92, "change": 0.001, "changePercent": 0.11},
+      {"pair": "USD/GBP", "rate": 0.79, "change": -0.002, "changePercent": -0.25},
+      {"pair": "USD/JPY", "rate": 149.50, "change": 0.30, "changePercent": 0.20},
+      {"pair": "USD/INR", "rate": 83.20, "change": 0.15, "changePercent": 0.18},
+      {"pair": "EUR/GBP", "rate": 0.86, "change": -0.001, "changePercent": -0.12},
+      {"pair": "USD/CNY", "rate": 7.25, "change": 0.02, "changePercent": 0.28}
+    ],
+    "indices": {
+      "SENSEX": {"value": 72500.50, "change": 450.25, "changePercent": 0.62},
+      "NIFTY": {"value": 21800.75, "change": 125.50, "changePercent": 0.58},
+      "DOW": {"value": 38500.00, "change": 250.00, "changePercent": 0.65},
+      "NASDAQ": {"value": 15200.00, "change": -50.00, "changePercent": -0.33}
+    }
+  },
+  "portfolio": {
+    "totalSpent": 7500.00,
+    "savings": {
+      "current": 6000.00,
+      "goal": 10000.00,
+      "progress": 60
+    },
+    "expenses": [
+      {"id": 1, "date": "2024-01-15", "category": "Food", "amount": 450.00, "note": "Lunch with friends"},
+      {"id": 2, "date": "2024-01-14", "category": "Transport", "amount": 200.00, "note": "Uber rides"},
+      {"id": 3, "date": "2024-01-13", "category": "Entertainment", "amount": 800.00, "note": "Movie tickets"},
+      {"id": 4, "date": "2024-01-12", "category": "Study", "amount": 1200.00, "note": "Textbooks"},
+      {"id": 5, "date": "2024-01-11", "category": "Food", "amount": 350.00, "note": "Groceries"},
+      {"id": 6, "date": "2024-01-10", "category": "Utilities", "amount": 500.00, "note": "Internet bill"},
+      {"id": 7, "date": "2024-01-09", "category": "Transport", "amount": 150.00, "note": "Bus pass"},
+      {"id": 8, "date": "2024-01-08", "category": "Entertainment", "amount": 600.00, "note": "Concert ticket"}
+    ],
+    "monthlySpending": {
+      "Food": 3200,
+      "Transport": 1500,
+      "Entertainment": 1800,
+      "Study": 1000,
+      "Utilities": 500,
+      "Other": 0
+    }
+  },
+  "news": [
+    {
+      "id": 1,
+      "title": "Tech Stocks Rally on Strong Earnings Reports",
+      "category": "Stocks",
+      "summary": "Major technology companies report better-than-expected Q4 earnings, driving market optimism.",
+      "date": "2024-01-15",
+      "source": "Financial Times"
+    },
+    {
+      "id": 2,
+      "title": "Bitcoin Surges Past $43,000 Amid Institutional Interest",
+      "category": "Crypto",
+      "summary": "Bitcoin reaches new monthly highs as institutional investors increase their crypto allocations.",
+      "date": "2024-01-14",
+      "source": "CoinDesk"
+    },
+    {
+      "id": 3,
+      "title": "Federal Reserve Holds Interest Rates Steady",
+      "category": "Forex",
+      "summary": "The Fed maintains current interest rates, signaling stability in monetary policy for the coming months.",
+      "date": "2024-01-13",
+      "source": "Bloomberg"
+    },
+    {
+      "id": 4,
+      "title": "Indian Markets Hit Record Highs",
+      "category": "Stocks",
+      "summary": "SENSEX and NIFTY reach all-time highs driven by strong economic indicators and foreign investment.",
+      "date": "2024-01-12",
+      "source": "Economic Times"
+    },
+    {
+      "id": 5,
+      "title": "Ethereum Upgrade Boosts Network Efficiency",
+      "category": "Crypto",
+      "summary": "Latest Ethereum network upgrade reduces transaction costs and improves scalability.",
+      "date": "2024-01-11",
+      "source": "CryptoNews"
+    },
+    {
+      "id": 6,
+      "title": "USD Strengthens Against Major Currencies",
+      "category": "Forex",
+      "summary": "US Dollar gains momentum against EUR and GBP following positive economic data releases.",
+      "date": "2024-01-10",
+      "source": "Reuters"
+    },
+    {
+      "id": 7,
+      "title": "AI Sector Sees Massive Investment Influx",
+      "category": "Stocks",
+      "summary": "Artificial intelligence companies attract billions in new funding, reshaping tech landscape.",
+      "date": "2024-01-09",
+      "source": "TechCrunch"
+    },
+    {
+      "id": 8,
+      "title": "DeFi Protocols Show Strong Growth",
+      "category": "Crypto",
+      "summary": "Decentralized finance platforms experience record transaction volumes and user adoption.",
+      "date": "2024-01-08",
+      "source": "DeFi Pulse"
+    }
+  ],
+  "chartData": {
+    "labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    "datasets": [
+      {
+        "label": "SENSEX",
+        "data": [71000, 71500, 71800, 72000, 72200, 72400, 72500],
+        "color": "#60a5fa"
+      },
+      {
+        "label": "NIFTY",
+        "data": [21000, 21100, 21200, 21300, 21400, 21500, 21800],
+        "color": "#34d399"
+      }
+    ]
+  },
+  "studentStats": {
+    "monthlyBudget": {
+      "used": 7500,
+      "total": 10000,
+      "percentage": 75
+    },
+    "savingsProgress": {
+      "current": 6000,
+      "goal": 10000,
+      "percentage": 60
+    },
+    "funMarkets": {
+      "bitcoin": {
+        "changePercent": 2.0
+      },
+      "sensex": {
+        "changePercent": 1.0
+      }
+    }
+  },
+  "studentChartData": {
+    "labels": ["Food", "Transport", "Entertainment", "Study Materials", "Misc"],
+    "datasets": [
+      {
+        "label": "Monthly Spending",
+        "data": [3200, 1500, 1800, 1000, 500],
+        "color": "#60a5fa"
+      }
+    ]
+  },
+  "studentTips": [
+    {
+      "id": 1,
+      "title": "5 Easy Ways to Save on Campus",
+      "category": "Savings",
+      "summary": "Discover simple hacks to cut costs without sacrificing your college experience. From meal prep to student discounts.",
+      "date": "2024-01-15"
+    },
+    {
+      "id": 2,
+      "title": "How to Track Pocket Money Without Stress",
+      "category": "Budgeting",
+      "summary": "Learn to manage your monthly allowance with easy tracking methods that don't feel like a chore.",
+      "date": "2024-01-14"
+    },
+    {
+      "id": 3,
+      "title": "Beginner-Friendly Crypto Trends to Watch",
+      "category": "Fun Finance",
+      "summary": "Curious about crypto? Here's a simple guide to understanding digital currencies without the jargon.",
+      "date": "2024-01-13"
+    },
+    {
+      "id": 4,
+      "title": "Side Hustle Ideas That Fit Your Schedule",
+      "category": "Side Hustle",
+      "summary": "Earn extra cash with flexible gigs perfect for students. Freelance, tutoring, and more.",
+      "date": "2024-01-12"
+    },
+    {
+      "id": 5,
+      "title": "Build Your Emergency Fund in College",
+      "category": "Savings",
+      "summary": "Start small, think big. Tips to build a safety net even on a tight student budget.",
+      "date": "2024-01-11"
+    },
+    {
+      "id": 6,
+      "title": "Smart Shopping: Student Discounts You're Missing",
+      "category": "Budgeting",
+      "summary": "Unlock savings with student IDs. From tech to food, here are discounts you should be using.",
+      "date": "2024-01-10"
+    }
+  ]
+}
+

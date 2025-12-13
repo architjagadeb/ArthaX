@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block content %}
+
+<main class="dashboard">
+  <div class="markets-container">
+    
+    <!-- Stocks Section -->
+    <div>
+      <h2 class="section-title">Stocks</h2>
+      <div class="glass market-section">
+        <table class="market-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Change</th>
+              <th>Change %</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for stock in markets.stocks %}
+            <tr class="market-row-clickable" data-symbol="{{ stock.symbol }}" data-type="stock" data-price="{{ stock.price }}" data-change="{{ stock.change }}" data-change-percent="{{ stock.changePercent }}">
+              <td>
+                <div class="symbol">{{ stock.symbol }}</div>
+              </td>
+              <td>
+                <div class="name">{{ stock.name }}</div>
+              </td>
+              <td>
+                <div class="price">${{ "{:.2f}".format(stock.price) }}</div>
+              </td>
+              <td>
+                <div class="change {% if stock.change >= 0 %}positive{% else %}negative{% endif %}">
+                  {% if stock.change >= 0 %}+{% endif %}${{ "{:.2f}".format(stock.change) }}
+                </div>
+              </td>
+              <td>
+                <div class="change {% if stock.changePercent >= 0 %}positive{% else %}negative{% endif %}">
+                  {% if stock.changePercent >= 0 %}+{% endif %}{{ "{:.2f}".format(stock.changePercent) }}%
+                </div>
+              </td>
+            </tr>
+            <tr class="chart-dropdown-row" data-symbol="{{ stock.symbol }}" style="display: none;">
+              <td colspan="5" class="chart-dropdown-cell">
+                <div class="chart-container">
+                  <div class="chart-header">
+                    <div class="chart-title">
+                      <h3>{{ stock.name }}</h3>
+                      <span class="chart-symbol">{{ stock.symbol }}</span>
+                    </div>
+                    <div class="chart-price-info">
+                      <span class="chart-current-price">${{ "{:.2f}".format(stock.price) }}</span>
+                      <span class="chart-change {% if stock.change >= 0 %}positive{% else %}negative{% endif %}">
+                        {% if stock.change >= 0 %}+{% endif %}${{ "{:.2f}".format(stock.change) }} ({% if stock.changePercent >= 0 %}+{% endif %}{{ "{:.2f}".format(stock.changePercent) }}%)
+                      </span>
+                    </div>
+                  </div>
+                  <div class="time-range-buttons">
+                    <button class="time-range-btn active" data-range="1D">1D</button>
+                    <button class="time-range-btn" data-range="5D">5D</button>
+                    <button class="time-range-btn" data-range="1M">1M</button>
+                    <button class="time-range-btn" data-range="1Y">1Y</button>
+                    <button class="time-range-btn" data-range="5Y">5Y</button>
+                    <button class="time-range-btn" data-range="MAX">MAX</button>
+                  </div>
+                  <div class="chart-wrapper">
+                    <canvas class="price-chart" data-symbol="{{ stock.symbol }}"></canvas>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Crypto Section -->
+    <div>
+      <h2 class="section-title">Cryptocurrency</h2>
+      <div class="glass market-section">
+        <table class="market-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Change</th>
+              <th>Change %</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for crypto in markets.crypto %}
+            <tr class="market-row-clickable" data-symbol="{{ crypto.symbol }}" data-type="crypto" data-price="{{ crypto.price }}" data-change="{{ crypto.change }}" data-change-percent="{{ crypto.changePercent }}">
+              <td>
+                <div class="symbol">{{ crypto.symbol }}</div>
+              </td>
+              <td>
+                <div class="name">{{ crypto.name }}</div>
+              </td>
+              <td>
+                <div class="price">${{ "{:,.2f}".format(crypto.price) }}</div>
+              </td>
+              <td>
+                <div class="change {% if crypto.change >= 0 %}positive{% else %}negative{% endif %}">
+                  {% if crypto.change >= 0 %}+{% endif %}${{ "{:,.2f}".format(crypto.change) }}
+                </div>
+              </td>
+              <td>
+                <div class="change {% if crypto.changePercent >= 0 %}positive{% else %}negative{% endif %}">
+                  {% if crypto.changePercent >= 0 %}+{% endif %}{{ "{:.2f}".format(crypto.changePercent) }}%
+                </div>
+              </td>
+            </tr>
+            <tr class="chart-dropdown-row" data-symbol="{{ crypto.symbol }}" style="display: none;">
+              <td colspan="5" class="chart-dropdown-cell">
+                <div class="chart-container">
+                  <div class="chart-header">
+                    <div class="chart-title">
+                      <h3>{{ crypto.name }}</h3>
+                      <span class="chart-symbol">{{ crypto.symbol }}</span>
+                    </div>
+                    <div class="chart-price-info">
+                      <span class="chart-current-price">${{ "{:,.2f}".format(crypto.price) }}</span>
+                      <span class="chart-change {% if crypto.change >= 0 %}positive{% else %}negative{% endif %}">
+                        {% if crypto.change >= 0 %}+{% endif %}${{ "{:,.2f}".format(crypto.change) }} ({% if crypto.changePercent >= 0 %}+{% endif %}{{ "{:.2f}".format(crypto.changePercent) }}%)
+                      </span>
+                    </div>
+                  </div>
+                  <div class="time-range-buttons">
+                    <button class="time-range-btn active" data-range="1D">1D</button>
+                    <button class="time-range-btn" data-range="5D">5D</button>
+                    <button class="time-range-btn" data-range="1M">1M</button>
+                    <button class="time-range-btn" data-range="1Y">1Y</button>
+                    <button class="time-range-btn" data-range="5Y">5Y</button>
+                    <button class="time-range-btn" data-range="MAX">MAX</button>
+                  </div>
+                  <div class="chart-wrapper">
+                    <canvas class="price-chart" data-symbol="{{ crypto.symbol }}"></canvas>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Forex Section -->
+    <div>
+      <h2 class="section-title">Forex</h2>
+      <div class="glass market-section">
+        <table class="market-table">
+          <thead>
+            <tr>
+              <th>Pair</th>
+              <th>Rate</th>
+              <th>Change</th>
+              <th>Change %</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for forex in markets.forex %}
+            <tr class="market-row-clickable" data-symbol="{{ forex.pair }}" data-type="forex" data-price="{{ forex.rate }}" data-change="{{ forex.change }}" data-change-percent="{{ forex.changePercent }}">
+              <td>
+                <div class="symbol">{{ forex.pair }}</div>
+              </td>
+              <td>
+                <div class="price">{{ "{:.2f}".format(forex.rate) }}</div>
+              </td>
+              <td>
+                <div class="change {% if forex.change >= 0 %}positive{% else %}negative{% endif %}">
+                  {% if forex.change >= 0 %}+{% endif %}{{ "{:.4f}".format(forex.change) }}
+                </div>
+              </td>
+              <td>
+                <div class="change {% if forex.changePercent >= 0 %}positive{% else %}negative{% endif %}">
+                  {% if forex.changePercent >= 0 %}+{% endif %}{{ "{:.2f}".format(forex.changePercent) }}%
+                </div>
+              </td>
+            </tr>
+            <tr class="chart-dropdown-row" data-symbol="{{ forex.pair }}" style="display: none;">
+              <td colspan="4" class="chart-dropdown-cell">
+                <div class="chart-container">
+                  <div class="chart-header">
+                    <div class="chart-title">
+                      <h3>{{ forex.pair }}</h3>
+                    </div>
+                    <div class="chart-price-info">
+                      <span class="chart-current-price">{{ "{:.2f}".format(forex.rate) }}</span>
+                      <span class="chart-change {% if forex.change >= 0 %}positive{% else %}negative{% endif %}">
+                        {% if forex.change >= 0 %}+{% endif %}{{ "{:.4f}".format(forex.change) }} ({% if forex.changePercent >= 0 %}+{% endif %}{{ "{:.2f}".format(forex.changePercent) }}%)
+                      </span>
+                    </div>
+                  </div>
+                  <div class="time-range-buttons">
+                    <button class="time-range-btn active" data-range="1D">1D</button>
+                    <button class="time-range-btn" data-range="5D">5D</button>
+                    <button class="time-range-btn" data-range="1M">1M</button>
+                    <button class="time-range-btn" data-range="1Y">1Y</button>
+                    <button class="time-range-btn" data-range="5Y">5Y</button>
+                    <button class="time-range-btn" data-range="MAX">MAX</button>
+                  </div>
+                  <div class="chart-wrapper">
+                    <canvas class="price-chart" data-symbol="{{ forex.pair }}"></canvas>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Market Indices -->
+    <div>
+      <h2 class="section-title">Market Indices</h2>
+      <div class="market-row">
+        {% for index_name, index_data in markets.indices.items() %}
+        <div class="glass market-card">
+          <h3>{{ index_name }}</h3>
+          <div class="price">
+            {% if index_name in ['SENSEX', 'NIFTY'] %}
+              ₹{{ "{:,.2f}".format(index_data.value) }}
+            {% else %}
+              ${{ "{:,.2f}".format(index_data.value) }}
+            {% endif %}
+          </div>
+          <div class="change {% if index_data.changePercent >= 0 %}positive{% else %}negative{% endif %}">
+            {% if index_data.changePercent >= 0 %}+{% endif %}{{ "{:.2f}".format(index_data.changePercent) }}%
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="{{ url_for('static', filename='js/markets.js') }}"></script>
+
+{% endblock %}
