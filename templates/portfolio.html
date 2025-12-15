@@ -51,6 +51,20 @@
         </div>
       </div>
       <div class="metric-item">
+        <div class="metric-icon">🏦</div>
+        <div class="metric-content">
+          <div class="metric-label">Savings This Month</div>
+          <div class="metric-value">₹{{ "{:,.0f}".format(financial_data.savings_this_month) }}</div>
+        </div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-icon">💎</div>
+        <div class="metric-content">
+          <div class="metric-label">Total Savings</div>
+          <div class="metric-value">₹{{ "{:,.0f}".format(financial_data.total_savings) }}</div>
+        </div>
+      </div>
+      <div class="metric-item">
         <div class="metric-icon">🎯</div>
         <div class="metric-content">
           <div class="metric-label">Savings Goal</div>
@@ -135,7 +149,6 @@
   </div>
 
   <!-- Recent Savings -->
-  {% if financial_data.savings %}
   <div class="glass expenses-section" style="margin-bottom: 2rem;">
     <h2>Recent Savings</h2>
     <div class="table-container">
@@ -148,18 +161,25 @@
           </tr>
         </thead>
         <tbody id="savingsTableBody">
-          {% for saving in financial_data.savings %}
-          <tr>
-            <td>{{ saving.date }}</td>
-            <td class="expense-amount" style="color: #4ade80;">+₹{{ "{:,.0f}".format(saving.amount) }}</td>
-            <td class="expense-note">{{ saving.note or "-" }}</td>
-          </tr>
-          {% endfor %}
+          {% if financial_data.savings %}
+            {% for saving in financial_data.savings %}
+            <tr>
+              <td>{{ saving.date }}</td>
+              <td class="expense-amount" style="color: #4ade80;">+₹{{ "{:,.0f}".format(saving.amount) }}</td>
+              <td class="expense-note">{{ saving.note or "-" }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="3" style="text-align: center; color: #94a3b8; padding: 2rem;">
+                No savings yet. Click "Add Savings" to start tracking!
+              </td>
+            </tr>
+          {% endif %}
         </tbody>
       </table>
     </div>
   </div>
-  {% endif %}
   {% endif %}
 </main>
 

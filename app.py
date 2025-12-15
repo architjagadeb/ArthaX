@@ -56,9 +56,10 @@ def calculate_financial_data(user):
     total_savings = sum(sav.amount for sav in all_savings)
     
     # Get current month savings
-    month_savings = Saving.query.filter_by(user_id=user.id)\
-                                .filter(Saving.date >= first_day)\
-                                .all()
+    month_savings = [
+        sav for sav in all_savings
+        if sav.date and sav.date.year == today.year and sav.date.month == today.month
+    ]
     savings_this_month = sum(sav.amount for sav in month_savings)
     
     # Calculate monthly budget
@@ -309,7 +310,8 @@ def add_saving():
         
         saving_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
         amount = float(data['amount'])
-        note = data.get('note', '').strip()
+        note = data.get('note', '')
+        note = note.strip() if note else None
         
         if amount <= 0:
             return jsonify({'success': False, 'error': 'Amount must be greater than 0'}), 400
