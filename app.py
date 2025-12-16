@@ -1,9 +1,11 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
+from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, Response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from datetime import datetime, date
 import json
 import os
+import csv
+from io import StringIO
 
 from models import db, User, UserProfile, Expense, Saving
 
@@ -473,6 +475,39 @@ def update_savings_goal():
 @app.route('/api/data')
 def api_data():
     return jsonify(load_data())
+
+
+@app.route('/export/expenses/csv', methods=['GET'])
+@login_required
+def export_expenses_csv():
+    """Export all expenses for the current user as CSV"""
+    # Fetch only the current user's expenses, latest first
+    expenses = Expense.query.filter_by(user_id=current_user.id)\
+                            .order_by(Expense.date.desc())\
+                            .all()
+
+    output = StringIO()  # StringIO keeps the CSV in memory (no disk writes)
+    writer = csv.writer(output)
+
+    # Write header row
+    writer.writerow(['Date', 'Category', 'Amount', 'Note'])
+
+    # Write expense rows with safe formatting
+    for exp in expenses:
+        writer.writerow([
+            exp.date.strftime('%Y-%m-%d') if exp.date else '',
+            exp.category,
+            exp.amount,
+            exp.note or ''
+        ])
+
+    csv_data = output.getvalue()
+    output.close()
+
+    # Set headers so the browser downloads the file
+    response = Response(csv_data, mimetype='text/csv')
+    response.headers['Content-Disposition'] = 'attachment; filename=arthax_expenses.csv'
+    return response
 
 if __name__ == "__main__":
     app.run(debug=True)

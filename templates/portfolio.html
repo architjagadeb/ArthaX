@@ -112,6 +112,12 @@
       <span class="btn-icon">➖</span>
       <span>Withdraw Savings</span>
     </button>
+
+    <!-- Export Expenses -->
+    <a class="glass add-expense-btn" href="{{ url_for('export_expenses_csv') }}" style="max-width: 300px; margin-bottom: 2rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+      <span class="btn-icon">⬇️</span>
+      <span>Export Expenses (CSV)</span>
+    </a>
   </div>
 
   <!-- Expenses Table -->
