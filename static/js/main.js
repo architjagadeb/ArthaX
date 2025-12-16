@@ -217,6 +217,8 @@ window.addEventListener('load', animateCards);
 document.addEventListener('DOMContentLoaded', function() {
   initializePortfolio();
   initializeSavings();
+  initializeSavingsGoalEdit();
+  initializeWithdrawals();
 });
 
 function initializePortfolio() {
@@ -307,29 +309,127 @@ function initializeSavings() {
   }
 }
 
+function initializeWithdrawals() {
+  const withdrawBtn = document.getElementById('withdrawSavingsBtn');
+  const withdrawModal = document.getElementById('withdrawModal');
+  const closeWithdrawModal = document.getElementById('closeWithdrawModal');
+  const cancelWithdrawBtn = document.getElementById('cancelWithdrawBtn');
+  const withdrawForm = document.getElementById('withdrawForm');
+
+  if (!withdrawModal) return;
+
+  const openModal = () => {
+    withdrawModal.classList.add('active');
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('withdrawDate');
+    if (dateInput) dateInput.value = today;
+  };
+
+  if (withdrawBtn) withdrawBtn.addEventListener('click', openModal);
+
+  const closeModal = () => {
+    withdrawModal.classList.remove('active');
+    if (withdrawForm) withdrawForm.reset();
+  };
+
+  if (closeWithdrawModal) closeWithdrawModal.addEventListener('click', closeModal);
+  if (cancelWithdrawBtn) cancelWithdrawBtn.addEventListener('click', closeModal);
+
+  withdrawModal.addEventListener('click', (e) => {
+    if (e.target === withdrawModal) {
+      closeModal();
+    }
+  });
+
+  if (withdrawForm) {
+    withdrawForm.addEventListener('submit', handleWithdrawSubmit);
+  }
+}
+
+function initializeSavingsGoalEdit() {
+  const editButton = document.getElementById('editSavingsGoalBtn');
+  const editModal = document.getElementById('editGoalModal');
+  const closeEditModal = document.getElementById('closeEditGoalModal');
+  const cancelEditGoalBtn = document.getElementById('cancelEditGoalBtn');
+  const editGoalForm = document.getElementById('editGoalForm');
+  const newSavingsGoalInput = document.getElementById('newSavingsGoal');
+
+  if (!editModal || !editGoalForm) return;
+
+  const openEditModal = () => {
+    editModal.classList.add('active');
+    if (newSavingsGoalInput && window.portfolioData && window.portfolioData.savings) {
+      newSavingsGoalInput.value = window.portfolioData.savings.goal;
+    }
+  };
+
+  if (editButton) editButton.addEventListener('click', openEditModal);
+
+  const closeModal = () => {
+    editModal.classList.remove('active');
+    editGoalForm.reset();
+  };
+
+  if (closeEditModal) closeEditModal.addEventListener('click', closeModal);
+  if (cancelEditGoalBtn) cancelEditGoalBtn.addEventListener('click', closeModal);
+
+  editModal.addEventListener('click', (e) => {
+    if (e.target === editModal) {
+      closeModal();
+    }
+  });
+
+  editGoalForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const formData = new FormData(editGoalForm);
+
+    fetch('/api/savings-goal/update', {
+      method: 'POST',
+      body: formData
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          editModal.classList.remove('active');
+          editGoalForm.reset();
+          setTimeout(() => window.location.reload(), 300);
+        } else {
+          alert('Error: ' + (data.error || 'Failed to update savings goal'));
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+      });
+  });
+}
+
 function handleExpenseSubmit(e) {
   e.preventDefault();
 
-  const formData = {
-    date: document.getElementById('expenseDate').value,
-    category: document.getElementById('expenseCategory').value,
-    amount: parseFloat(document.getElementById('expenseAmount').value),
-    note: document.getElementById('expenseNote').value || null
-  };
+  const expenseDate = document.getElementById('expenseDate').value;
+  const expenseCategory = document.getElementById('expenseCategory').value;
+  const expenseAmount = document.getElementById('expenseAmount').value;
+  const expenseNote = document.getElementById('expenseNote').value;
+
+  const parsedAmount = expenseAmount ? parseFloat(expenseAmount) : 0;
 
   // Validation
-  if (!formData.date || !formData.category || !formData.amount || formData.amount <= 0) {
+  if (!expenseDate || !expenseCategory || !parsedAmount || parsedAmount <= 0) {
     alert('Please fill in all required fields with valid values.');
     return;
   }
 
+  const formData = new FormData();
+  formData.append('date', expenseDate);
+  formData.append('category', expenseCategory);
+  formData.append('amount', expenseAmount);
+  formData.append('note', expenseNote || '');
+
   // Submit to backend
   fetch('/api/expenses', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(formData)
+    body: formData
   })
   .then(response => response.json())
   .then(data => {
@@ -411,7 +511,9 @@ function updateTotals(amount) {
   // Update progress (assuming savings goal stays the same)
   // In a real app, you'd calculate this based on income - expenses
   // For now, we'll just update the display
-  updateProgressBar();
+  if (window.portfolioData.savings) {
+    updateProgressBar(window.portfolioData.savings.progress);
+  }
 }
 
 function handleSavingsSubmit(e) {
@@ -446,14 +548,15 @@ function handleSavingsSubmit(e) {
         addSavingsToTable(data.saving);
       }
 
+      updateSavingsUI({
+        total_savings: data.total_savings,
+        savings_progress: data.savings_progress,
+        savings_goal: window.portfolioData?.savings?.goal
+      });
+
       // Close modal and reset form
       document.getElementById('savingsModal').classList.remove('active');
       e.target.reset();
-
-      // Reload page to get updated totals from backend
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
     } else {
       alert('Error: ' + (data.error || 'Failed to add savings'));
     }
@@ -464,15 +567,64 @@ function handleSavingsSubmit(e) {
   });
 }
 
+function handleWithdrawSubmit(e) {
+  e.preventDefault();
+
+  const withdrawDate = document.getElementById('withdrawDate').value;
+  const withdrawAmount = document.getElementById('withdrawAmount').value;
+  const withdrawNote = document.getElementById('withdrawNote').value;
+
+  const parsedAmount = withdrawAmount ? parseFloat(withdrawAmount) : 0;
+
+  if (!withdrawDate || !parsedAmount || parsedAmount <= 0) {
+    alert('Please fill in all required fields with valid values.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('date', withdrawDate);
+  formData.append('amount', withdrawAmount);
+  formData.append('note', withdrawNote || '');
+
+  fetch('/api/savings/withdraw', {
+    method: 'POST',
+    body: formData
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        addSavingsToTable(data.saving);
+        updateSavingsUI({
+          total_savings: data.total_savings,
+          savings_progress: data.savings_progress,
+          savings_goal: window.portfolioData?.savings?.goal
+        });
+
+        document.getElementById('withdrawModal').classList.remove('active');
+        e.target.reset();
+      } else {
+        alert('Error: ' + (data.error || 'Failed to withdraw savings'));
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
+    });
+}
+
 function addSavingsToTable(saving) {
   const tbody = document.getElementById('savingsTableBody');
   if (!tbody) return;
-  
+
   const row = document.createElement('tr');
+  const isNegative = saving.amount < 0;
+  const displayAmount = Math.abs(saving.amount).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  const amountSign = isNegative ? '-' : '+';
+  const amountColor = isNegative ? '#f87171' : '#4ade80';
 
   row.innerHTML = `
     <td>${saving.date}</td>
-    <td class="expense-amount" style="color: #4ade80;">+₹${saving.amount.toLocaleString('en-IN', {maximumFractionDigits: 0})}</td>
+    <td class="expense-amount" style="color: ${amountColor};">${amountSign}₹${displayAmount}</td>
     <td class="expense-note">${saving.note || '-'}</td>
   `;
 
@@ -489,19 +641,17 @@ function addSavingsToTable(saving) {
   }, 10);
 }
 
-function updateProgressBar() {
-  if (!window.portfolioData) return;
+function updateProgressBar(progress) {
+  if (progress === undefined || progress === null) return;
 
-  const progress = window.portfolioData.savings.progress;
   const progressBar = document.getElementById('savingsProgressBar');
   if (progressBar) {
-    // Animate progress bar
     progressBar.style.width = '0%';
     setTimeout(() => {
       progressBar.style.width = `${progress}%`;
       const progressText = progressBar.querySelector('.progress-text');
       if (progressText) {
-        progressText.textContent = `${progress}%`;
+        progressText.textContent = `${Math.round(progress)}%`;
       }
     }, 100);
   }
@@ -516,5 +666,30 @@ function animateProgressBar() {
       progressBar.style.width = targetWidth;
     }, 300);
   }
+}
+
+function updateSavingsUI({ total_savings, savings_progress, savings_goal }) {
+  if (window.portfolioData && window.portfolioData.savings) {
+    if (total_savings !== undefined) window.portfolioData.savings.current = total_savings;
+    if (savings_progress !== undefined) window.portfolioData.savings.progress = savings_progress;
+    if (savings_goal) window.portfolioData.savings.goal = savings_goal;
+  }
+
+  const totalSavingsValue = document.getElementById('totalSavingsValue');
+  if (totalSavingsValue && total_savings !== undefined) {
+    totalSavingsValue.textContent = `₹${Number(total_savings).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+  }
+
+  const progressTotal = document.getElementById('progressTotalSavings');
+  if (progressTotal && total_savings !== undefined) {
+    progressTotal.textContent = `₹${Number(total_savings).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+  }
+
+  const progressGoal = document.getElementById('progressGoalValue');
+  if (progressGoal && savings_goal !== undefined && savings_goal !== null) {
+    progressGoal.textContent = `₹${Number(savings_goal).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+  }
+
+  updateProgressBar(savings_progress);
 }
 

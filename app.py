@@ -36,6 +36,27 @@ def load_data():
 
 # ==================== Financial Calculation Helpers ====================
 
+def get_expense_timeline(user):
+    """Return chronological expense totals for charting"""
+    if not user or not user.profile:
+        return {'labels': [], 'values': []}
+
+    expenses = Expense.query.filter_by(user_id=user.id)\
+                            .order_by(Expense.date.asc())\
+                            .all()
+
+    timeline = {}
+    for exp in expenses:
+        if not exp.date:
+            continue
+        period_label = exp.date.strftime('%Y-%m')
+        timeline[period_label] = timeline.get(period_label, 0) + exp.amount
+
+    labels = sorted(timeline.keys())
+    values = [timeline[label] for label in labels]
+    return {'labels': labels, 'values': values}
+
+
 def calculate_financial_data(user):
     """Calculate all financial metrics for a user"""
     if not user or not user.profile:
@@ -43,13 +64,14 @@ def calculate_financial_data(user):
     
     profile = user.profile
     today = date.today()
-    first_day = date(today.year, today.month, 1)
-    
-    # Get current month expenses
-    expenses = Expense.query.filter_by(user_id=user.id)\
-                           .filter(Expense.date >= first_day)\
-                           .all()
-    total_spent = sum(exp.amount for exp in expenses)
+
+    expense_timeline = get_expense_timeline(user)
+    current_period = today.strftime('%Y-%m')
+    total_spent = 0
+    for label, value in zip(expense_timeline['labels'], expense_timeline['values']):
+        if label == current_period:
+            total_spent = value
+            break
     
     # Get all savings
     all_savings = Saving.query.filter_by(user_id=user.id).all()
@@ -92,7 +114,8 @@ def calculate_financial_data(user):
         'budget_used_percent': budget_used_percent,
         'savings_progress': savings_progress,
         'expenses': [exp.to_dict() for exp in recent_expenses],
-        'savings': [sav.to_dict() for sav in recent_savings]
+        'savings': [sav.to_dict() for sav in recent_savings],
+        'expense_timeline': expense_timeline
     }
 
 # ==================== Routes ====================
@@ -105,9 +128,20 @@ def home():
     if current_user.is_authenticated:
         financial_data = calculate_financial_data(current_user)
         if financial_data:
+            timeline = get_expense_timeline(current_user)
+            chart_data = {
+                'labels': timeline['labels'],
+                'datasets': [
+                    {
+                        'label': 'Expenses',
+                        'data': timeline['values'],
+                        'color': '#60a5fa'
+                    }
+                ]
+            }
             return render_template('home.html',
                                  financial_data=financial_data,
-                                 chart_data=data['studentChartData'],
+                                 chart_data=chart_data,
                                  student_tips=data['studentTips'][:3],
                                  markets=data['markets'],
                                  is_authenticated=True)
@@ -270,13 +304,24 @@ def render_portfolio_page(show_onboarding=False):
 def add_expense():
     """API endpoint to add new expense"""
     try:
-        data = request.get_json()
-        
-        expense_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
-        category = data['category']
-        amount = float(data['amount'])
-        note = data.get('note', '').strip()
-        
+        expense_date = request.form.get("date", "")
+        expense_date = expense_date.strip() if expense_date else None
+
+        category = request.form.get("category", "")
+        category = category.strip() if category else None
+
+        amount_raw = request.form.get("amount", "")
+        amount_raw = amount_raw.strip() if amount_raw else None
+
+        note = request.form.get("note", "")
+        note = note.strip() if note else None
+
+        if not expense_date or not category or not amount_raw:
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+
+        expense_date = datetime.strptime(expense_date, '%Y-%m-%d').date()
+        amount = float(amount_raw) if amount_raw else 0
+
         if amount <= 0:
             return jsonify({'success': False, 'error': 'Amount must be greater than 0'}), 400
         
@@ -326,12 +371,101 @@ def add_saving():
         
         db.session.add(saving)
         db.session.commit()
+
+        financial = calculate_financial_data(current_user)
         
         return jsonify({
             'success': True,
-            'saving': saving.to_dict()
+            'saving': saving.to_dict(),
+            'total_savings': financial['total_savings'],
+            'savings_this_month': financial['savings_this_month'],
+            'savings_progress': financial['savings_progress']
         }), 201
         
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+@app.route('/api/savings/withdraw', methods=['POST'])
+@login_required
+def withdraw_saving():
+    """API endpoint to withdraw savings (stored as negative saving)"""
+    try:
+        withdrawal_date = request.form.get("date", "")
+        withdrawal_date = withdrawal_date.strip() if withdrawal_date else None
+
+        amount_raw = request.form.get("amount", "")
+        amount_raw = amount_raw.strip() if amount_raw else None
+
+        note = request.form.get("note", "")
+        note = note.strip() if note else None
+
+        if not withdrawal_date or not amount_raw:
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+
+        withdrawal_date = datetime.strptime(withdrawal_date, '%Y-%m-%d').date()
+        amount = float(amount_raw) if amount_raw else 0
+
+        if amount <= 0:
+            return jsonify({'success': False, 'error': 'Amount must be greater than 0'}), 400
+
+        current_total = sum(sav.amount for sav in Saving.query.filter_by(user_id=current_user.id).all())
+        if amount > current_total:
+            return jsonify({'success': False, 'error': 'Cannot withdraw more than total savings'}), 400
+
+        saving = Saving(
+            user_id=current_user.id,
+            date=withdrawal_date,
+            amount=-amount,
+            note=note if note else None
+        )
+
+        db.session.add(saving)
+        db.session.commit()
+
+        data = calculate_financial_data(current_user)
+
+        return jsonify({
+            'success': True,
+            'saving': saving.to_dict(),
+            'total_savings': data['total_savings'],
+            'savings_this_month': data['savings_this_month'],
+            'savings_progress': data['savings_progress']
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+@app.route('/api/savings-goal/update', methods=['POST'])
+@login_required
+def update_savings_goal():
+    """Update the savings goal for the current user"""
+    try:
+        value = request.form.get("new_savings_goal", "")
+        value = float(value) if value else 0
+
+        if value <= 0:
+            return jsonify({'success': False, 'error': 'Savings goal must be greater than 0'}), 400
+
+        profile = current_user.profile
+        if not profile:
+            return jsonify({'success': False, 'error': 'Profile not found'}), 400
+
+        profile.savings_goal = value
+        profile.updated_at = datetime.utcnow()
+        db.session.commit()
+
+        data = calculate_financial_data(current_user)
+
+        return jsonify({
+            'success': True,
+            'savings_goal': value,
+            'total_savings': data['total_savings'],
+            'savings_this_month': data['savings_this_month'],
+            'savings_progress': data['savings_progress']
+        }), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 400

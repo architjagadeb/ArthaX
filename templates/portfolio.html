@@ -61,13 +61,16 @@
         <div class="metric-icon">💎</div>
         <div class="metric-content">
           <div class="metric-label">Total Savings</div>
-          <div class="metric-value">₹{{ "{:,.0f}".format(financial_data.total_savings) }}</div>
+          <div class="metric-value" id="totalSavingsValue">₹{{ "{:,.0f}".format(financial_data.total_savings) }}</div>
         </div>
       </div>
       <div class="metric-item">
         <div class="metric-icon">🎯</div>
         <div class="metric-content">
-          <div class="metric-label">Savings Goal</div>
+          <div class="metric-label">
+            Savings Goal
+            <button type="button" id="editSavingsGoalBtn" style="border: none; background: transparent; color: #a5b4fc; font-size: 0.9rem; cursor: pointer; padding: 0 0.35rem; margin-left: 0.35rem;">✏️ Edit</button>
+          </div>
           <div class="metric-value">₹{{ "{:,.0f}".format(financial_data.profile.savings_goal) }}</div>
         </div>
       </div>
@@ -81,8 +84,8 @@
             </div>
           </div>
           <div class="progress-amounts">
-            <span>₹{{ "{:,.0f}".format(financial_data.total_savings) }}</span>
-            <span>₹{{ "{:,.0f}".format(financial_data.profile.savings_goal) }}</span>
+            <span id="progressTotalSavings">₹{{ "{:,.0f}".format(financial_data.total_savings) }}</span>
+            <span id="progressGoalValue">₹{{ "{:,.0f}".format(financial_data.profile.savings_goal) }}</span>
           </div>
         </div>
       </div>
@@ -90,17 +93,26 @@
     <p class="helper-text">Track your spending and stay aligned with your goals.</p>
   </div>
 
-  <!-- Add Expense Button -->
-  <button class="glass add-expense-btn" id="addExpenseBtn">
-    <span class="btn-icon">➕</span>
-    <span>Add Expense</span>
-  </button>
+  <!-- Portfolio Action Buttons -->
+  <div style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 2rem;">
+    <!-- Add Expense Button -->
+    <button class="glass add-expense-btn" id="addExpenseBtn">
+      <span class="btn-icon">➕</span>
+      <span>Add Expense</span>
+    </button>
 
-  <!-- Add Savings Button -->
-  <button class="glass add-expense-btn" id="addSavingsBtn" style="max-width: 300px; margin-bottom: 2rem;">
-    <span class="btn-icon">➕</span>
-    <span>Add Savings</span>
-  </button>
+    <!-- Add Savings Button -->
+    <button class="glass add-expense-btn" id="addSavingsBtn" style="max-width: 300px; margin-bottom: 2rem;">
+      <span class="btn-icon">➕</span>
+      <span>Add Savings</span>
+    </button>
+
+    <!-- Withdraw Savings Button -->
+    <button class="glass add-expense-btn" id="withdrawSavingsBtn" style="max-width: 300px; margin-bottom: 2rem;">
+      <span class="btn-icon">➖</span>
+      <span>Withdraw Savings</span>
+    </button>
+  </div>
 
   <!-- Expenses Table -->
   <div class="glass expenses-section">
@@ -165,7 +177,8 @@
             {% for saving in financial_data.savings %}
             <tr>
               <td>{{ saving.date }}</td>
-              <td class="expense-amount" style="color: #4ade80;">+₹{{ "{:,.0f}".format(saving.amount) }}</td>
+              {% set is_negative = saving.amount < 0 %}
+              <td class="expense-amount" style="color: {{ '#f87171' if is_negative else '#4ade80' }};">{{ '-' if is_negative else '+' }}₹{{ "{:,.0f}".format(saving.amount | abs) }}</td>
               <td class="expense-note">{{ saving.note or "-" }}</td>
             </tr>
             {% endfor %}
@@ -192,7 +205,7 @@
       <h2>Add New Expense</h2>
       <button class="modal-close" id="closeModal">&times;</button>
     </div>
-    <form id="expenseForm" class="expense-form">
+    <form id="expenseForm" class="expense-form" method="POST" action="{{ url_for('add_expense') }}">
       <div class="form-group">
         <label for="expenseDate">Date</label>
         <input type="date" id="expenseDate" name="date" required>
@@ -248,6 +261,54 @@
       <div class="form-actions">
         <button type="submit" class="btn btn-secondary">Add Savings</button>
         <button type="button" class="btn btn-primary" id="cancelSavingsBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Withdraw Savings Modal -->
+<div class="modal-overlay" id="withdrawModal">
+  <div class="glass modal-content">
+    <div class="modal-header">
+      <h2>Withdraw Savings</h2>
+      <button class="modal-close" id="closeWithdrawModal">&times;</button>
+    </div>
+    <form id="withdrawForm" class="expense-form" method="POST" action="{{ url_for('withdraw_saving') }}">
+      <div class="form-group">
+        <label for="withdrawDate">Date</label>
+        <input type="date" id="withdrawDate" name="date" required>
+      </div>
+      <div class="form-group">
+        <label for="withdrawAmount">Amount (₹)</label>
+        <input type="number" id="withdrawAmount" name="amount" min="0" step="0.01" placeholder="0.00" required>
+      </div>
+      <div class="form-group">
+        <label for="withdrawNote">Note (Optional)</label>
+        <input type="text" id="withdrawNote" name="note" placeholder="Add a note about this withdrawal">
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-secondary">Withdraw</button>
+        <button type="button" class="btn btn-primary" id="cancelWithdrawBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Savings Goal Modal -->
+<div class="modal-overlay" id="editGoalModal">
+  <div class="glass modal-content">
+    <div class="modal-header">
+      <h2>Edit Savings Goal</h2>
+      <button class="modal-close" id="closeEditGoalModal">&times;</button>
+    </div>
+    <form id="editGoalForm" class="expense-form" method="POST" action="{{ url_for('update_savings_goal') }}">
+      <div class="form-group">
+        <label for="newSavingsGoal">New Savings Goal (₹)</label>
+        <input type="number" id="newSavingsGoal" name="new_savings_goal" min="0" step="0.01" value="{{ financial_data.profile.savings_goal }}" required>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-secondary">Save</button>
+        <button type="button" class="btn btn-primary" id="cancelEditGoalBtn">Cancel</button>
       </div>
     </form>
   </div>
